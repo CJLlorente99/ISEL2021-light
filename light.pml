@@ -1,9 +1,19 @@
 /*  Modelo para verificacion formal, incluye especificacion LTL.
     ISEL 2021 */
 
+/* Especificacion ltl */
+ltl switchOn {
+    [] (button -> <> light)
+}
+
+ltl switchOff {
+    [] ((deadline && (!button W !light)) -> <> !light)
+}
+
+
 /* FSM inputs (used for guards) */
 int button;
-int deadline = 1; // not exactly an input
+int deadline;
 
 /* FSM outputs */
 int light;
@@ -13,19 +23,23 @@ int light;
 active proctype fsm() {
     int state = 0;
 
-    printf("0\n");
+    printf("Initial state: 0\n");
+    printf("State = %d, button = %d, deadline = %d, light = %d\n", state, button, deadline, light)
     do
-    :: (state == 0)  -> atomic {
-        if
-        :: (button) -> light = 1; state = 1; button = 0; printf("Transition from state 0 to state 1\n");
-        fi
-    }
-    :: (state == 1) -> atomic {
-        if
-        :: (button) -> button = 0; printf("Transition from state 1 to state 1\n");
-        :: (deadline && !button) -> state = 0; light = 0; printf("Transition from state 1 to state 0\n");
-        fi
-    }
+    :: if
+        :: (state == 0)  -> atomic {
+            if
+            :: (button) -> light = 1; state = 1; button = 0; printf("(button) Transition from state 0 to state 1\n");
+            fi
+        }
+        :: (state == 1) -> atomic {
+            if
+            :: (button) -> button = 0; deadline = 0; printf("(button) Transition from state 1 to state 1\n");
+            :: (deadline && !button) -> state = 0; light = 0; deadline = 0; printf("(deadline && !button) Transition from state 1 to state 0\n");
+            fi
+        }
+    fi;
+    printf("State = %d, button = %d, deadline = %d, light = %d\n", state, button, deadline, light) 
     od
 }
 
@@ -33,9 +47,8 @@ active proctype fsm() {
 
 active proctype environment(){
     do
-    ::  if
-        :: button = 1;
-        :: skip;
-        fi
+    :: !button -> skip
+    :: button = 1
+    :: deadline = 1
     od
 }
