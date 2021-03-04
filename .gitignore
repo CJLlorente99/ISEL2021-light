@@ -1,2 +1,5 @@
 *.pre
-
+pan.*
+*.trail
+*.tmp
+pan
